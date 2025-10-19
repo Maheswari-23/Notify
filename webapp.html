@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Notify - Admin Panel</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-light: #f3f0ff;
+            --primary-dark: #7c3aed;
+            --secondary: #6b7280;
+            --success: #10b981;
+            --error: #ef4444;
+            --background: #fafafa;
+            --surface: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border: #e5e7eb;
+            --border-light: #f3f4f6;
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #faf5ff 0%, #f9fafb 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            color: var(--primary);
+            background: var(--primary-light);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+
+        .role-dropdown {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            min-width: 180px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 100px 2rem 4rem;
+        }
+
+        .form-container {
+            background: var(--surface);
+            border: 2px solid var(--border-light);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 2rem;
+        }
+        
+        .form-header {
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .form-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-label i {
+            color: var(--primary);
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            margin-top: 0.75rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .file-upload {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 2rem;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload.file-selected {
+            border-color: var(--success);
+            background: #ecfdf5;
+        }
+
+        .file-upload input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .status-message-container {
+            margin-top: 1.5rem;
+            min-height: 60px; /* Reserve space to prevent layout shifts */
+        }
+        
+        .status-message {
+            padding: 1.25rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .status-success {
+            background: #ecfdf5;
+            border: 2px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .status-error {
+            background: #fef2f2;
+            border: 2px solid #fca5a5;
+            color: #991b1b;
+        }
+
+        .preview-container {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .notification-preview {
+            background: var(--primary-light);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+        }
+        
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .ai-btn {
+            margin-left: auto;
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ai-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .events-feed-container {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-lg);
+            margin-top: 2rem;
+        }
+
+        .feed-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .feed-filters select {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            flex-grow: 1;
+        }
+
+        .event-card {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .event-card img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .event-card-content h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        .event-card-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.75rem;
+        }
+    </style>
+    <script type="text/javascript">
+  var appInsights = window.appInsights || function (config) {
+      function r(config) { t[config] = function () { var i = arguments; t.queue.push(function () { t[config].apply(t, i) }) } }
+      var t = { config: config }, u = document, e = window, o = "script", s = "AuthenticatedUserContext",
+          i = "startTrackPage", a = "stopTrackPage", c = "trackEvent", l = "trackException", d = "trackMetric", f = "trackPageView", v = "trackTrace";
+      r(c); r(l); r(d); r(f); r(v); r(i); r(a); r(s);
+      t.queue = [];
+      var n = u.createElement(o); n.src = config.url || "https://az416426.vo.msecnd.net/scripts/a/ai.0.js";
+      u.getElementsByTagName(o)[0].parentNode.appendChild(n);
+      t.cookie = u.cookie;
+      return t;
+  }({
+      connectionString: "__APP_INSIGHTS_CONNECTION_STRING__"
+  });
+  window.appInsights = appInsights;
+  appInsights.trackPageView();
+</script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-bell"></i>
+            Notify
+        </div>
+        <div class="role-selector">
+            <select class="role-dropdown" id="loginRole">
+                <option value="Admin">👑 Admin</option>
+                <option value="Club">🎭 Club</option>
+                <option value="Placement">💼 Placement Officer</option>
+            </select>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <h1>Create Announcement</h1>
+                <p>Share important updates with your college community</p>
+            </div>
+
+            <form id="postForm">
+                <div class="form-group">
+                    <label class="form-label" for="postTitle"><i class="fas fa-heading"></i> Title</label>
+                    <input type="text" class="form-input" id="postTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="postDescription">
+                        <i class="fas fa-align-left"></i>
+                        Description
+                        <button id="rewriteBtn" class="ai-btn"><i class="fas fa-magic-sparkles"></i> AI Rewrite</button>
+                    </label>
+                    <textarea class="form-textarea" id="postDescription" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-graduation-cap"></i> Target Academic Years</label>
+                    <div class="checkbox-group" id="year-group">
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="year1" value="1"><label for="year1">1st Year</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="year2" value="2"><label for="year2">2nd Year</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="year3" value="3"><label for="year3">3rd Year</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="year4" value="4"><label for="year4">4th Year</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="year_all"><label for="year_all">All Years</label></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-building"></i> Target Departments</label>
+                    <div class="checkbox-group" id="dept-group">
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="dept_cse" value="CSE"><label for="dept_cse">CSE</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="dept_ece" value="ECE"><label for="dept_ece">ECE</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="dept_mech" value="MECH"><label for="dept_mech">MECH</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="dept_eee" value="EEE"><label for="dept_eee">EEE</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="dept_csbs" value="CSBS"><label for="dept_csbs">CSBS</label></div>
+                        <div class="checkbox-item"><input type="checkbox" class="checkbox-input" id="dept_all"><label for="dept_all">All Depts</label></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="eventTime"><i class="fas fa-calendar"></i> Event Date & Time (Optional)</label>
+                    <input type="datetime-local" class="form-input" id="eventTime">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-upload"></i> Upload Poster (Required)</label>
+                    <div class="file-upload">
+                        <input type="file" id="mediaFile" accept="image/*" required>
+                        <i class="fas fa-cloud-upload-alt file-upload-icon" style="font-size: 2rem; color: var(--secondary);"></i>
+                        <span id="fileUploadText">Choose file or drag here</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Submit Announcement</span>
+                </button>
+
+                <div id="statusMessageContainer" class="status-message-container"></div>
+            </form>
+        </div>
+
+        <div class="preview-container">
+            <h3>Live Preview</h3>
+            <div class="notification-preview">
+                <div class="notification-icon" id="previewIcon"><i class="fas fa-bullhorn"></i></div>
+                <div class="notification-content">
+                    <h4 id="previewTitle" class="notification-title">Your Title Here</h4>
+                    <p id="previewBody" class="notification-body">Notification description will appear here...</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="events-feed-container">
+            <h2>Recent Announcements Feed</h2>
+            <div class="feed-filters">
+                <select id="feedDeptFilter">
+                    <option value="ALL">All Departments</option>
+                    <option value="CSE">CSE</option>
+                    <option value="ECE">ECE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="EEE">EEE</option>
+                    <option value="CSBS">CSBS</option>
+                </select>
+                <select id="feedYearFilter">
+                    <option value="ALL">All Years</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
+            </div>
+            <div id="eventsList">
+                <div class="loading-feed">Loading events...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- ELEMENT REFERENCES ---
+        const titleInput = document.getElementById('postTitle');
+        const descriptionInput = document.getElementById('postDescription');
+        const previewTitle = document.getElementById('previewTitle');
+        const previewBody = document.getElementById('previewBody');
+        const mediaFileInput = document.getElementById('mediaFile');
+        const fileUploadText = document.getElementById('fileUploadText');
+        const fileUploadContainer = mediaFileInput.parentElement;
+        const rewriteBtn = document.getElementById('rewriteBtn');
+        const feedDeptFilter = document.getElementById('feedDeptFilter');
+        const feedYearFilter = document.getElementById('feedYearFilter');
+        const eventsListContainer = document.getElementById('eventsList');
+
+        // --- LIVE PREVIEW LOGIC ---
+        titleInput.addEventListener('input', () => {
+            previewTitle.textContent = titleInput.value || 'Your Title Here';
+        });
+        descriptionInput.addEventListener('input', () => {
+            previewBody.textContent = descriptionInput.value || 'Notification description will appear here...';
+        });
+        mediaFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileUploadText.textContent = file.name;
+                fileUploadContainer.classList.add('file-selected');
+            } else {
+                fileUploadText.textContent = 'Choose file or drag here';
+                fileUploadContainer.classList.remove('file-selected');
+            }
+        });
+
+        // --- 'SELECT ALL' CHECKBOX LOGIC ---
+        function setupSelectAll(allCheckboxId, groupContainerId) {
+            const allCheckbox = document.getElementById(allCheckboxId);
+            const groupCheckboxes = document.querySelectorAll(`#${groupContainerId} input[type="checkbox"]:not(#${allCheckboxId})`);
+            allCheckbox.addEventListener('change', (e) => {
+                groupCheckboxes.forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
+            });
+        }
+        setupSelectAll('year_all', 'year-group');
+        setupSelectAll('dept_all', 'dept-group');
+
+        // --- FORM SUBMISSION LOGIC ---
+        document.getElementById('postForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const submitBtnText = submitBtn.querySelector('span');
+            const statusMessageContainer = document.getElementById('statusMessageContainer');
+
+            submitBtn.disabled = true;
+            submitBtnText.textContent = 'Submitting...';
+            submitBtn.insertAdjacentHTML('afterbegin', '<span class="loading"></span>');
+            statusMessageContainer.innerHTML = '';
+
+            const azureFunctionUrl = '__SUBMIT_POST_URL__';
+
+            const toBase64 = file => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+            
+            // Corrected "All" logic to match backend expectation
+            const getSelectedValues = (groupId, allId) => {
+                if (document.getElementById(allId).checked) {
+                    return ['ALL'];
+                }
+                return Array.from(document.querySelectorAll(`#${groupId} input[type="checkbox"]:not(#${allId}):checked`)).map(cb => cb.value);
+            };
+
+            const targetYears = getSelectedValues('year-group', 'year_all');
+            const targetDepts = getSelectedValues('dept-group', 'dept_all');
+            
+            if (targetYears.length === 0 || targetDepts.length === 0) {
+                statusMessageContainer.innerHTML = `<div class="status-message status-error"><i class="fas fa-exclamation-triangle"></i>Error: Please select at least one target year and one department.</div>`;
+                // Reset button state
+                submitBtn.disabled = false;
+                if (submitBtn.querySelector('.loading')) submitBtn.querySelector('.loading').remove();
+                submitBtnText.textContent = 'Submit Announcement';
+                return;
+            }
+
+            const postData = {
+                createdBy: document.getElementById('loginRole').value,
+                title: titleInput.value,
+                description: descriptionInput.value,
+                year: targetYears,
+                dept: targetDepts,
+                eventDateTime: document.getElementById('eventTime').value,
+                posterBase64: await toBase64(mediaFileInput.files[0]),
+                generateAi: true // Set to true to ask the server to rewrite
+            };
+
+            console.log("Submitting:", JSON.stringify(postData, null, 2));
+
+            try {
+                const response = await fetch(azureFunctionUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(postData)
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'An unknown error occurred.');
+                }
+                statusMessageContainer.innerHTML = `<div class="status-message status-success"><i class="fas fa-check-circle"></i>Success! Post submitted and notifications sent.</div>`;
+                event.target.reset();
+                // Reset UI
+                previewTitle.textContent = 'Your Title Here';
+                previewBody.textContent = 'Notification description will appear here...';
+                fileUploadText.textContent = 'Choose file or drag here';
+                fileUploadContainer.classList.remove('file-selected');
+                fetchEvents(); // Refresh the event feed
+            } catch (error) {
+                console.error('Error submitting post:', error);
+                statusMessageContainer.innerHTML = `<div class="status-message status-error"><i class="fas fa-exclamation-triangle"></i>Error: ${error.message}</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                if (submitBtn.querySelector('.loading')) {
+                    submitBtn.querySelector('.loading').remove();
+                }
+                submitBtnText.textContent = 'Submit Announcement';
+            }
+        });
+        
+        // --- AI REWRITE LOGIC ---
+        rewriteBtn.addEventListener('click', async (event) => {
+            event.preventDefault();
+            const originalTitle = titleInput.value;
+            const originalDescription = descriptionInput.value;
+            if (!originalTitle || !originalDescription) {
+                alert('Please enter a title and description before using AI Rewrite.');
+                return;
+            }
+           const rewriteFunctionUrl = '__REWRITE_TEXT_URL__';
+            rewriteBtn.disabled = true;
+            rewriteBtn.innerHTML = '<span class="loading"></span> Rewriting...';
+            try {
+                const response = await fetch(rewriteFunctionUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: `${originalTitle} - ${originalDescription}` })
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to rewrite text.');
+                }
+                descriptionInput.value = result.rewrittenText;
+                descriptionInput.dispatchEvent(new Event('input')); // Update live preview
+            } catch (error) {
+                console.error('Rewrite Error:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                rewriteBtn.disabled = false;
+                rewriteBtn.innerHTML = '<i class="fas fa-magic-sparkles"></i> AI Rewrite';
+            }
+        });
+
+        // --- EVENT FEED LOGIC ---
+        async function fetchEvents() {
+            const dept = feedDeptFilter.value;
+            const year = feedYearFilter.value;
+            eventsListContainer.innerHTML = '<div class="loading-feed" style="text-align: center;">Loading events...</div>';
+            const getEventsFunctionUrl = '__GET_EVENTS_URL__';
+            const url = new URL(getEventsFunctionUrl);
+            url.searchParams.append('dept', dept);
+            url.searchParams.append('year', year);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch events.');
+                const events = await response.json();
+                eventsListContainer.innerHTML = '';
+                if (events.length === 0) {
+                    eventsListContainer.innerHTML = '<p style="text-align: center;">No events found for this filter.</p>';
+                    return;
+                }
+                events.forEach(event => {
+                    const eventDate = event.eventDateTime ? new Date(event.eventDateTime).toLocaleString() : 'Not specified';
+                    const eventCard = `
+                        <div class="event-card">
+                            <img src="${event.posterUrl}" alt="Event Poster">
+                            <div class="event-card-content">
+                                <h4>${event.title}</h4>
+                                <p>${event.description}</p>
+                                <div class="event-card-meta">
+                                    <span><strong>For:</strong> ${JSON.parse(event.dept).join(', ')} / ${JSON.parse(event.year).join(', ')} Years</span> | 
+                                    <span><strong>Event Time:</strong> ${eventDate}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    eventsListContainer.insertAdjacentHTML('beforeend', eventCard);
+                });
+            } catch (error) {
+                console.error('Fetch Events Error:', error);
+                eventsListContainer.innerHTML = `<p style="color: var(--error); text-align: center;">Error loading events.</p>`;
+            }
+        }
+        feedDeptFilter.addEventListener('change', fetchEvents);
+        feedYearFilter.addEventListener('change', fetchEvents);
+        document.addEventListener('DOMContentLoaded', fetchEvents);
+    </script>
+</body>
+</html>
