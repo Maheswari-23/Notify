@@ -15,7 +15,6 @@ jobs:
   # ----------------------------
   codeql-analysis:
     name: Static Security Scan (CodeQL)
-    # Only run on push or PRs that are NOT closed
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     permissions:
@@ -26,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [javascript] # For HTML/CSS/JS based site
+        language: [javascript]
 
     steps:
       - name: Checkout repository
@@ -44,9 +43,7 @@ jobs:
   # 2️⃣ Deploy to Azure Static Web Apps
   # ----------------------------
   build_and_deploy_job:
-    # This job needs the CodeQL scan to finish first
     needs: codeql-analysis 
-    # Only run on push or PRs that are NOT closed
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
@@ -62,6 +59,34 @@ jobs:
           sed -i 's|__REWRITE_TEXT_URL__|${{ secrets.REWRITE_TEXT_URL }}|g' webapp.html
           sed -i 's|__GET_EVENTS_URL__|${{ secrets.GET_EVENTS_URL }}|g' webapp.html
 
+      - name: Create basic package.json for Oryx detection
+        run: |
+          cat > package.json << EOF
+          {
+            "name": "static-web-app",
+            "version": "1.0.0",
+            "description": "Static HTML web application",
+            "scripts": {
+              "build": "echo 'No build step required for static site'"
+            },
+            "dependencies": {},
+            "devDependencies": {}
+          }
+          EOF
+
+      - name: Create SWA configuration
+        run: |
+          cat > staticwebapp.config.json << EOF
+          {
+            "navigationFallback": {
+              "rewrite": "/index.html"
+            },
+            "mimeTypes": {
+              ".json": "text/json"
+            }
+          }
+          EOF
+
       - name: Build and Deploy to Azure
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -70,40 +95,47 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/"
-          api_location: ""
-          output_location: ""
+          api_location: "" # Leave empty if no API
+          output_location: "" # Leave empty since we're deploying directly
+          skip_app_build: true # Skip Oryx build for static HTML
+          production_branch: "main"
+
+      - name: Wait for deployment to complete
+        run: sleep 30
 
   # ----------------------------
   # 3️⃣ OWASP ZAP DAST Security Scan
   # ----------------------------
   zap_scan:
-    # This job needs the site to be deployed first
     needs: build_and_deploy_job 
     name: OWASP ZAP Baseline Scan
     runs-on: ubuntu-latest
+    if: success() # Only run if deployment succeeded
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
         with:
-          # Use the same URL your deploy job targets
-          target: "https://yellow-sea-09951f500.3.azurestaticapps.net" 
-          cmd_options: "-a"
+          target: "https://yellow-sea-09951f500.3.azurestaticapps.net"
+          cmd_options: "-a -j"
+          rules_file_name: ".zap/rules.tsv"
           fail_action: false
           allow_issue_writing: false
 
       - name: Upload ZAP Report
-        # This step uploads the report
         uses: actions/upload-artifact@v4
         with:
-          name: Security_Report
-          path: zap_report.html # ZAP action outputs this file by default
+          name: ZAP-Security-Report
+          path: zap_report.html
+          retention-days: 7
 
   # ----------------------------
-  # 4️⃣ Close Pull Request Job (from your original file)
+  # 4️⃣ Close Pull Request Job
   # ----------------------------
   close_pull_request_job:
-    # Only run if a PR is closed
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
