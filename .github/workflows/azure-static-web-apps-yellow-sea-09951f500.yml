@@ -123,7 +123,7 @@ jobs:
     needs: build_and_deploy_job 
     name: OWASP ZAP Baseline Scan
     runs-on: ubuntu-latest
-    if: success() # Only run if deployment succeeded
+    if: success()
 
     steps:
       - name: Checkout repository
@@ -146,9 +146,6 @@ jobs:
           90004	WARN
           90005	WARN
           EOF
-          
-          echo "Created rules file with content:"
-          cat .zap/rules.tsv
 
       - name: Run ZAP Baseline Scan
         uses: zaproxy/action-baseline@v0.10.0
@@ -158,17 +155,6 @@ jobs:
           rules_file_name: ".zap/rules.tsv"
           fail_action: false
           allow_issue_writing: false
-
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: zap-security-report
-          path: |
-            zap_report.html
-            report_html.html
-            report_md.md
-            report_json.json
-          retention-days: 7
 
   # ----------------------------
   # 4️⃣ Close Pull Request Job
