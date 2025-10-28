@@ -118,6 +118,9 @@ jobs:
   # ----------------------------
   # 3️⃣ OWASP ZAP DAST Security Scan
   # ----------------------------
+ # ----------------------------
+  # 3️⃣ OWASP ZAP DAST Security Scan
+  # ----------------------------
   zap-scan:
     needs: build_and_deploy_job 
     name: OWASP ZAP Baseline Scan
@@ -154,9 +157,11 @@ jobs:
           rules_file_name: ".zap/rules.tsv"
           fail_action: false
           allow_issue_writing: false
+          artifact_name: "zap-scan-results"  # Add this line with hyphen instead of underscore
 
       - name: Upload ZAP Reports
         uses: actions/upload-artifact@v4
+        if: always()  # Upload even if ZAP scan finds issues
         with:
           name: zap-scan-report
           path: |
@@ -180,4 +185,5 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
+
 
