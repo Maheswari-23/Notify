@@ -103,34 +103,50 @@ jobs:
       - name: Wait for deployment to complete
         run: sleep 30
 
-  # ----------------------------
-  # 3️⃣ OWASP ZAP DAST Security Scan
-  # ----------------------------
-  zap_scan:
-    needs: build_and_deploy_job 
-    name: OWASP ZAP Baseline Scan
-    runs-on: ubuntu-latest
-    if: success() # Only run if deployment succeeded
+# ----------------------------
+# 3️⃣ OWASP ZAP DAST Security Scan
+# ----------------------------
+zap_scan:
+  needs: build_and_deploy_job 
+  name: OWASP ZAP Baseline Scan
+  runs-on: ubuntu-latest
+  if: success() # Only run if deployment succeeded
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # This ensures the .zap directory is properly checked out
+        fetch-depth: 0
 
-      - name: Run ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.10.0
-        with:
-          target: "https://yellow-sea-09951f500.3.azurestaticapps.net"
-          cmd_options: "-a -j"
-          rules_file_name: ".zap/rules.tsv"
-          fail_action: false
-          allow_issue_writing: false
+    - name: Debug - List files to verify .zap directory exists
+      run: |
+        echo "Current directory structure:"
+        ls -la
+        echo "Checking for .zap directory:"
+        ls -la .zap/ || echo ".zap directory not found"
+        echo "Checking rules.tsv content:"
+        cat .zap/rules.tsv || echo "rules.tsv not found"
 
-      - name: Upload ZAP Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: ZAP-Security-Report
-          path: zap_report.html
-          retention-days: 7
+    - name: Run ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.10.0
+      with:
+        target: "https://yellow-sea-09951f500.3.azurestaticapps.net"
+        cmd_options: "-a -j"
+        rules_file_name: ".zap/rules.tsv"
+        fail_action: false
+        allow_issue_writing: false
+
+    - name: Upload ZAP Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: zap-security-report
+        path: |
+          zap_report.html
+          report_html.html
+          report_md.md
+          report_json.json
+        retention-days: 7
 
   # ----------------------------
   # 4️⃣ Close Pull Request Job
@@ -147,3 +163,4 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
+
