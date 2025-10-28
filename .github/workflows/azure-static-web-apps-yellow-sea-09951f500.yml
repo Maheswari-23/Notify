@@ -14,28 +14,12 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
-    
-    # ADDED THIS PERMISSIONS BLOCK. IT'S REQUIRED FOR SECURE LOGIN.
-    permissions:
-      id-token: write
-      contents: read
 
     steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-          lfs: false
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # ADDED THIS STEP TO LOG IN TO AZURE SECURELY
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      # ADDED THIS STEP TO REPLACE YOUR SECRETS
-      # Note: I am using 'webapp.html' based on your repository screenshot
+      # 🔐 Replace secrets in your HTML before deployment
       - name: Replace API keys in HTML
         run: |
           sed -i 's|__APP_INSIGHTS_CONNECTION_STRING__|${{ secrets.APP_INSIGHTS_CONNECTION_STRING }}|g' webapp.html
@@ -43,42 +27,27 @@ jobs:
           sed -i 's|__REWRITE_TEXT_URL__|${{ secrets.REWRITE_TEXT_URL }}|g' webapp.html
           sed -i 's|__GET_EVENTS_URL__|${{ secrets.GET_EVENTS_URL }}|g' webapp.html
 
-      - name: Build And Deploy
+      # 🚀 Deploy to Azure Static Web Apps
+      - name: Build and Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
-          # REMOVED the "azure_static_web_apps_api_token" line
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "" # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
+          app_location: "/"       # Your HTML files are in root folder
+          api_location: ""        # No API folder
+          output_location: ""     # No build output folder
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     name: Close Pull Request Job
 
-    # ADDED THIS PERMISSIONS BLOCK.
-    permissions:
-      id-token: write
-      contents: read
-
     steps:
-      # ADDED THIS STEP TO LOG IN TO AZURE SECURELY
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Close Pull Request
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
-          # REMOVED the "azure_static_web_apps_api_token" line
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
