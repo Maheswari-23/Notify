@@ -108,9 +108,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/"
-          api_location: "" # Leave empty if no API
-          output_location: "" # Leave empty since we're deploying directly
-          skip_app_build: true # Skip Oryx build for static HTML
+          api_location: ""
+          output_location: "/"
           production_branch: "main"
 
       - name: Wait for deployment to complete
@@ -156,6 +155,16 @@ jobs:
           fail_action: false
           allow_issue_writing: false
 
+      - name: Upload ZAP Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-security-report
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+          retention-days: 7
+
   # ----------------------------
   # 4️⃣ Close Pull Request Job
   # ----------------------------
@@ -171,4 +180,3 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
-
